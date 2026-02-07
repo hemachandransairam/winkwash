@@ -1,5 +1,4 @@
 import "package:auto_route/auto_route.dart";
-import "package:wink_dupe/features/auth/presentation/views/login.view.dart";
 
 import "router.gr.dart";
 

@@ -1,7 +1,6 @@
-import "package:wink_dupe/core/utils/compositions.dart";
 import "package:injectable/injectable.dart";
-
 import "package:wink_dupe/core/error/failures.dart";
+import "package:wink_dupe/core/utils/compositions.dart";
 import "package:wink_dupe/features/auth/domain/entities/user.entity.dart";
 import "package:wink_dupe/features/auth/domain/usecases/login.usecase.dart";
 

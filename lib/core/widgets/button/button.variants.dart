@@ -1,7 +1,7 @@
 import "package:flutter/material.dart";
 import "package:mix/mix.dart";
 
-final secondaryButtonVariant = Variant("secondary");
+const secondaryButtonVariant = Variant("secondary");
 
 final secondaryButtonVariantStyle = Style(
   secondaryButtonVariant(
