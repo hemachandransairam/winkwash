@@ -1,0 +1,19 @@
+﻿Analyzing wink_dupe...                                          
+
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\auth\presentation\views\login.view.dart:225:32 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\views\home.view.dart:44:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\views\home.view.dart:323:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\views\home.view.dart:385:41 - deprecated_member_use
+
+flutter : 4 issues found. (ran in 5.3s)
+At line:1 char:1
++ flutter analyze > analyze_output.txt 
+2>&1 ; Get-Content analyze_outpu ...
++ 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecifi 
+   ed: (4 issues found. (ran in 5.3s):S  
+  tring) [], RemoteException
+    + FullyQualifiedErrorId : NativeComm 
+   andError
+ 

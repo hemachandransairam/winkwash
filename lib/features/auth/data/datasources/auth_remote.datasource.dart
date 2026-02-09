@@ -1,6 +1,5 @@
-import "package:dio/dio.dart";
 import "package:injectable/injectable.dart";
-
+import "package:supabase_flutter/supabase_flutter.dart";
 import "package:wink_dupe/core/error/exceptions.dart";
 import "package:wink_dupe/features/auth/data/models/request/login_request.model.dart";
 import "package:wink_dupe/features/auth/data/models/response/login_response.model.dart";
@@ -12,27 +11,41 @@ abstract class AuthRemoteDataSource {
 
 @LazySingleton(as: AuthRemoteDataSource)
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
-  const AuthRemoteDataSourceImpl(this._dio);
+  const AuthRemoteDataSourceImpl(this._supabase);
 
-  final Dio _dio;
+  final SupabaseClient _supabase;
 
   @override
   Future<LoginResponse> login(LoginRequest request) async {
     try {
-      final response = await _dio.post("/auth/login", data: request.toJson());
+      final response = await _supabase.auth.signInWithPassword(
+        email: request.email,
+        password: request.password,
+      );
 
-      return LoginResponse.fromMap(response.data as Map<String, dynamic>);
-    } on DioException catch (e) {
-      throw ServerException.fromDioException(e);
+      final user = response.user;
+      if (user == null)
+        throw const ServerException("Login failed: No user returned");
+
+      return LoginResponse(
+        user: UserDto(
+          id: user.id,
+          email: user.email ?? "",
+          name: user.userMetadata?["full_name"] ?? "User",
+        ),
+        token: response.session?.accessToken ?? "",
+      );
+    } catch (e) {
+      throw ServerException(e.toString());
     }
   }
 
   @override
   Future<void> logout() async {
     try {
-      await _dio.post("/auth/logout");
-    } on DioException catch (e) {
-      throw ServerException.fromDioException(e);
+      await _supabase.auth.signOut();
+    } catch (e) {
+      throw ServerException(e.toString());
     }
   }
 }
