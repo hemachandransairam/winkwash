@@ -3,20 +3,20 @@ import '../widgets/custom_widgets.dart';
 import 'payment_methods_page.dart';
 
 class BookingSummaryPage extends StatelessWidget {
-  final List<Map<String, dynamic>> selectedServices;
+  final List<String> selectedServices;
   final double totalPrice;
-  final String date;
-  final String time;
-  final Map<String, String> vehicle;
+  final DateTime selectedDate;
+  final String selectedTime;
+  final String vehicleType;
   final String address;
 
   const BookingSummaryPage({
     super.key,
     required this.selectedServices,
     required this.totalPrice,
-    required this.date,
-    required this.time,
-    required this.vehicle,
+    required this.selectedDate,
+    required this.selectedTime,
+    required this.vehicleType,
     required this.address,
   });
 
@@ -65,9 +65,9 @@ class BookingSummaryPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
                   ...selectedServices.map(
-                    (s) => _buildPriceItem(s['name'], "Rs. ${s['price']}"),
+                    (serviceName) => _buildPriceItem(serviceName, ""),
                   ),
-                  _buildPriceItem("Tax & Fees", "Rs. 99"),
+
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 20),
                     child: Divider(color: Color(0xFFF0F0F0), thickness: 1),
@@ -84,7 +84,7 @@ class BookingSummaryPage extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        "Rs. ${totalPrice + 99}",
+                        "Rs. ${totalPrice.toStringAsFixed(0)}",
                         style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w800,
@@ -159,9 +159,9 @@ class BookingSummaryPage extends StatelessWidget {
                     (context) => PaymentMethodsPage(
                       selectedServices: selectedServices,
                       totalPrice: totalPrice,
-                      date: date,
-                      time: time,
-                      vehicle: vehicle,
+                      selectedDate: selectedDate,
+                      selectedTime: selectedTime,
+                      vehicleType: vehicleType,
                       address: address,
                     ),
               ),

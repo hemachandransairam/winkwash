@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'home_screen.dart';
 
 class SelectVehicleScreen extends StatefulWidget {
   const SelectVehicleScreen({super.key});
@@ -140,14 +139,12 @@ class _SelectVehicleScreenState extends State<SelectVehicleScreen> {
                               selectedCarType == null
                                   ? null
                                   : () {
-                                    Navigator.pop(context);
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder:
-                                            (context) => const HomeScreen(),
-                                      ),
-                                    );
+                                    // Return the selected vehicle data
+                                    Navigator.pop(context); // Close dialog
+                                    Navigator.pop(context, {
+                                      'brand': selectedBrand,
+                                      'carType': selectedCarType,
+                                    }); // Return to booking page with data
                                   },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF01102B),

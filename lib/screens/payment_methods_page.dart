@@ -4,20 +4,20 @@ import '../widgets/custom_widgets.dart';
 import 'e_ticket_page.dart';
 
 class PaymentMethodsPage extends StatefulWidget {
-  final List<Map<String, dynamic>> selectedServices;
+  final List<String> selectedServices;
   final double totalPrice;
-  final String date;
-  final String time;
-  final Map<String, String> vehicle;
+  final DateTime selectedDate;
+  final String selectedTime;
+  final String vehicleType;
   final String address;
 
   const PaymentMethodsPage({
     super.key,
     required this.selectedServices,
     required this.totalPrice,
-    required this.date,
-    required this.time,
-    required this.vehicle,
+    required this.selectedDate,
+    required this.selectedTime,
+    required this.vehicleType,
     required this.address,
   });
 
@@ -46,12 +46,10 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
       await Supabase.instance.client.from('bookings').insert({
         'user_id': user.id,
         'selected_services': widget.selectedServices,
-        'total_price': widget.totalPrice + 99,
-        'booking_date': widget.date,
-        'booking_time': widget.time,
-        'vehicle_name': widget.vehicle['name'],
-        'vehicle_brand': widget.vehicle['brand'],
-        'vehicle_type': widget.vehicle['type'],
+        'total_price': widget.totalPrice,
+        'booking_date': widget.selectedDate.toIso8601String().split('T')[0],
+        'booking_time': widget.selectedTime,
+        'vehicle_type': widget.vehicleType,
         'address': widget.address,
         'payment_method': _selectedMethod,
         'status': 'pending',

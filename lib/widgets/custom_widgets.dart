@@ -36,6 +36,7 @@ Widget buildServiceTile({
   required IconData icon,
   required bool isSelected,
   required VoidCallback onTap,
+  double? price,
 }) {
   return GestureDetector(
     onTap: onTap,
@@ -69,13 +70,29 @@ Widget buildServiceTile({
           ),
           const SizedBox(width: 16),
           Expanded(
-            child: Text(
-              title,
-              style: const TextStyle(
-                fontWeight: FontWeight.w800,
-                fontSize: 16,
-                color: Color(0xFF01102B),
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
+                    color: Color(0xFF01102B),
+                  ),
+                ),
+                if (price != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    "Rs. ${price.toStringAsFixed(0)}",
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
           if (isSelected)
