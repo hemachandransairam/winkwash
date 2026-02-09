@@ -6,6 +6,7 @@ class SelectServicesPage extends StatefulWidget {
   final DateTime selectedDate;
   final String selectedTime;
   final String address;
+  final String addressLabel;
   final Map<String, String> vehicle;
 
   const SelectServicesPage({
@@ -13,6 +14,7 @@ class SelectServicesPage extends StatefulWidget {
     required this.selectedDate,
     required this.selectedTime,
     required this.address,
+    required this.addressLabel,
     required this.vehicle,
   });
 
@@ -153,8 +155,9 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                       totalPrice: _totalPrice,
                                       selectedDate: widget.selectedDate,
                                       selectedTime: widget.selectedTime,
-                                      vehicleType: widget.vehicle['type']!,
-                                      address: widget.address,
+                                      vehicle: widget.vehicle,
+                                      addressLabel: widget.addressLabel,
+                                      addressText: widget.address,
                                     ),
                               ),
                             );

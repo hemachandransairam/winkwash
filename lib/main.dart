@@ -41,7 +41,45 @@ class MyApp extends StatelessWidget {
       title: 'Wink Wash',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1A2B4A)),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF01102B),
+          primary: const Color(0xFF01102B),
+          secondary: Colors.blueAccent,
+          surface: Colors.white,
+          background: Colors.white,
+        ),
+        scaffoldBackgroundColor: Colors.white,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          foregroundColor: Color(0xFF01102B),
+          elevation: 0,
+          scrolledUnderElevation: 0,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF01102B),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: const Color(0xFFF9FAFB),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey[200]!),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey[200]!),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF01102B), width: 1.5),
+          ),
+        ),
         useMaterial3: true,
         textTheme: GoogleFonts.openSansTextTheme(Theme.of(context).textTheme),
       ),

@@ -7,8 +7,9 @@ class BookingSummaryPage extends StatelessWidget {
   final double totalPrice;
   final DateTime selectedDate;
   final String selectedTime;
-  final String vehicleType;
-  final String address;
+  final Map<String, String> vehicle;
+  final String addressLabel;
+  final String addressText;
 
   const BookingSummaryPage({
     super.key,
@@ -16,8 +17,9 @@ class BookingSummaryPage extends StatelessWidget {
     required this.totalPrice,
     required this.selectedDate,
     required this.selectedTime,
-    required this.vehicleType,
-    required this.address,
+    required this.vehicle,
+    required this.addressLabel,
+    required this.addressText,
   });
 
   @override
@@ -98,6 +100,110 @@ class BookingSummaryPage extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "Address",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF01102B),
+                        ),
+                      ),
+                      Text(
+                        addressLabel,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.location_on,
+                        color: Color(0xFF01102B),
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          addressText,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                            height: 1.5,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    "Vehicle",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF01102B),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.directions_car,
+                        color: Color(0xFF01102B),
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "${vehicle['brand']} ${vehicle['name']}",
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF01102B),
+                            ),
+                          ),
+                          Text(
+                            vehicle['type'] ?? '',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -161,8 +267,9 @@ class BookingSummaryPage extends StatelessWidget {
                       totalPrice: totalPrice,
                       selectedDate: selectedDate,
                       selectedTime: selectedTime,
-                      vehicleType: vehicleType,
-                      address: address,
+                      vehicle: vehicle,
+                      addressLabel: addressLabel,
+                      addressText: addressText,
                     ),
               ),
             );

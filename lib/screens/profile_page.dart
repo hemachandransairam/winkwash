@@ -5,6 +5,9 @@ import 'booking_history_page.dart';
 import '../auth/login.dart';
 import 'manage_address_page.dart';
 import 'my_vehicle_page.dart';
+import 'edit_profile_page.dart';
+import 'settings_page.dart';
+import 'help_center_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -143,9 +146,19 @@ class _ProfilePageState extends State<ProfilePage> {
                     // Menu Items
                     _buildMenuItem(
                       context,
-                      "Your Profile",
+                      "Edit Profile",
                       icon: Icons.account_circle_outlined,
-                      onTap: () => _showEditProfileDialog(),
+                      onTap: () async {
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const EditProfilePage(),
+                          ),
+                        );
+                        if (result == true) {
+                          _fetchUserData();
+                        }
+                      },
                     ),
                     _buildMenuItem(
                       context,
@@ -190,11 +203,27 @@ class _ProfilePageState extends State<ProfilePage> {
                       context,
                       "Settings",
                       icon: Icons.settings_outlined,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SettingsPage(),
+                          ),
+                        );
+                      },
                     ),
                     _buildMenuItem(
                       context,
                       "Help Center",
                       icon: Icons.help_outline,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const HelpCenterPage(),
+                          ),
+                        );
+                      },
                     ),
                     _buildMenuItem(
                       context,
@@ -208,66 +237,6 @@ class _ProfilePageState extends State<ProfilePage> {
                   ],
                 ),
               ),
-    );
-  }
-
-  void _showEditProfileDialog() {
-    final nameController = TextEditingController(text: _userData?['full_name']);
-    final phoneController = TextEditingController(text: _userData?['phone']);
-
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
-            ),
-            title: const Text(
-              "Edit Profile",
-              style: TextStyle(fontWeight: FontWeight.w800),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(labelText: "Full Name"),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: phoneController,
-                  decoration: const InputDecoration(labelText: "Phone Number"),
-                  keyboardType: TextInputType.phone,
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("Cancel"),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  final user = Supabase.instance.client.auth.currentUser;
-                  if (user != null) {
-                    await Supabase.instance.client.from('profiles').upsert({
-                      'id': user.id,
-                      'full_name': nameController.text,
-                      'phone': phoneController.text,
-                      'email': user.email,
-                    });
-                    _fetchUserData();
-                    if (mounted) Navigator.pop(context);
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF01102B),
-                  foregroundColor: Colors.white,
-                ),
-                child: const Text("Save"),
-              ),
-            ],
-          ),
     );
   }
 

@@ -79,7 +79,7 @@ class BookingHistoryPage extends StatelessWidget {
                     itemCount: bookings.length,
                     itemBuilder: (context, index) {
                       final booking = bookings[index];
-                      return _buildBookingCard(booking);
+                      return _buildBookingCard(context, booking);
                     },
                   );
                 },
@@ -87,11 +87,14 @@ class BookingHistoryPage extends StatelessWidget {
     );
   }
 
-  Widget _buildBookingCard(Map<String, dynamic> booking) {
+  Widget _buildBookingCard(BuildContext context, Map<String, dynamic> booking) {
     final date = DateTime.parse(booking['created_at']);
     final formattedDate = DateFormat('MMM dd, yyyy • hh:mm a').format(date);
     final status = booking['status'] ?? 'Pending';
     final price = booking['total_price'] ?? 0;
+    final isCancellable =
+        status.toLowerCase() == 'pending' ||
+        status.toLowerCase() == 'confirmed';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
@@ -171,7 +174,9 @@ class BookingHistoryPage extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  booking['address'] ?? "No address provided",
+                  booking['address_text'] ??
+                      booking['address'] ??
+                      "No address provided",
                   style: const TextStyle(
                     fontSize: 13,
                     color: Color(0xFF01102B),
@@ -183,8 +188,89 @@ class BookingHistoryPage extends StatelessWidget {
               ),
             ],
           ),
+          if (isCancellable) ...[
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: OutlinedButton(
+                onPressed: () => _showCancelDialog(context, booking['id']),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.red,
+                  side: const BorderSide(color: Colors.red),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  "Cancel Booking",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
+    );
+  }
+
+  Future<void> _showCancelDialog(BuildContext context, String bookingId) async {
+    return showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text("Cancel Booking?"),
+            content: const Text(
+              "Are you sure you want to cancel this booking? This action cannot be undone.",
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  "No, Keep it",
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(context); // Close dialog
+                  try {
+                    await Supabase.instance.client
+                        .from('bookings')
+                        .update({'status': 'Cancelled'})
+                        .eq('id', bookingId);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Booking cancelled successfully"),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("Error cancelling booking: $e"),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
+                },
+                child: const Text(
+                  "Yes, Cancel",
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
     );
   }
 
@@ -192,6 +278,8 @@ class BookingHistoryPage extends StatelessWidget {
     switch (status.toLowerCase()) {
       case 'completed':
         return Colors.green;
+      case 'confirmed':
+        return const Color(0xFF01102B);
       case 'cancelled':
         return Colors.red;
       case 'pending':

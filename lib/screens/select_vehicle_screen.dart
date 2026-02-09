@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SelectVehicleScreen extends StatefulWidget {
   const SelectVehicleScreen({super.key});
@@ -138,13 +139,80 @@ class _SelectVehicleScreenState extends State<SelectVehicleScreen> {
                           onPressed:
                               selectedCarType == null
                                   ? null
-                                  : () {
-                                    // Return the selected vehicle data
-                                    Navigator.pop(context); // Close dialog
-                                    Navigator.pop(context, {
-                                      'brand': selectedBrand,
-                                      'carType': selectedCarType,
-                                    }); // Return to booking page with data
+                                  : () async {
+                                    try {
+                                      // Show loading
+                                      showDialog(
+                                        context: context,
+                                        barrierDismissible: false,
+                                        builder:
+                                            (context) => const Center(
+                                              child: CircularProgressIndicator(
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                      );
+
+                                      // Get current user
+                                      final user =
+                                          Supabase
+                                              .instance
+                                              .client
+                                              .auth
+                                              .currentUser;
+
+                                      if (user != null) {
+                                        // Save vehicle to Supabase
+                                        await Supabase.instance.client
+                                            .from('vehicles')
+                                            .insert({
+                                              'user_id': user.id,
+                                              'name':
+                                                  '$selectedBrand $selectedCarType',
+                                              'brand': selectedBrand,
+                                              'type': selectedCarType,
+                                            });
+                                      }
+
+                                      // Close loading dialog
+                                      if (context.mounted) {
+                                        Navigator.pop(context);
+                                      }
+
+                                      // Close car type dialog
+                                      if (context.mounted) {
+                                        Navigator.pop(context);
+                                      }
+
+                                      // Return to booking page with data
+                                      if (context.mounted) {
+                                        Navigator.pop(context, {
+                                          'brand': selectedBrand,
+                                          'carType': selectedCarType,
+                                          'name':
+                                              '$selectedBrand $selectedCarType',
+                                        });
+                                      }
+                                    } catch (e) {
+                                      // Close loading dialog if error
+                                      if (context.mounted) {
+                                        Navigator.pop(context);
+                                      }
+
+                                      // Show error message
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              'Error saving vehicle: $e',
+                                            ),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                      }
+                                    }
                                   },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF01102B),

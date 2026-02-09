@@ -8,8 +8,9 @@ class PaymentMethodsPage extends StatefulWidget {
   final double totalPrice;
   final DateTime selectedDate;
   final String selectedTime;
-  final String vehicleType;
-  final String address;
+  final Map<String, String> vehicle;
+  final String addressLabel;
+  final String addressText;
 
   const PaymentMethodsPage({
     super.key,
@@ -17,8 +18,9 @@ class PaymentMethodsPage extends StatefulWidget {
     required this.totalPrice,
     required this.selectedDate,
     required this.selectedTime,
-    required this.vehicleType,
-    required this.address,
+    required this.vehicle,
+    required this.addressLabel,
+    required this.addressText,
   });
 
   @override
@@ -45,13 +47,15 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
     try {
       await Supabase.instance.client.from('bookings').insert({
         'user_id': user.id,
-        'selected_services': widget.selectedServices,
+        'service_names': widget.selectedServices,
         'total_price': widget.totalPrice,
         'booking_date': widget.selectedDate.toIso8601String().split('T')[0],
         'booking_time': widget.selectedTime,
-        'vehicle_type': widget.vehicleType,
-        'address': widget.address,
-        'payment_method': _selectedMethod,
+        'vehicle_type': widget.vehicle['type'],
+        'vehicle_brand': widget.vehicle['brand'],
+        'vehicle_name': widget.vehicle['name'],
+        'address_label': widget.addressLabel,
+        'address_text': widget.addressText,
         'status': 'pending',
       });
 
@@ -176,14 +180,7 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
               onTap: () => setState(() => _selectedMethod = "Cash"),
             ),
             const SizedBox(height: 16),
-            _buildSectionTitle("Wallet"),
-            _buildPaymentOption(
-              "Wallet",
-              Icons.account_balance_wallet_outlined,
-              isSelected: _selectedMethod == "Wallet",
-              onTap: () => setState(() => _selectedMethod = "Wallet"),
-            ),
-            const SizedBox(height: 16),
+
             _buildSectionTitle("Credit & Debit Card"),
             _buildPaymentOption(
               "Add Card",
