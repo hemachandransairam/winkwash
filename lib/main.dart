@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'auth/login.dart';
+import 'screens/onboarding_page.dart';
+import 'screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,11 +18,22 @@ void main() async {
     debugPrint("Supabase initialization error: $e");
   }
 
-  runApp(const MyApp());
+  final prefs = await SharedPreferences.getInstance();
+  final bool showOnboarding = !(prefs.getBool('onboarding_shown') ?? false);
+  final bool isLoggedIn = Supabase.instance.client.auth.currentSession != null;
+
+  runApp(MyApp(showOnboarding: showOnboarding, isLoggedIn: isLoggedIn));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool showOnboarding;
+  final bool isLoggedIn;
+
+  const MyApp({
+    super.key,
+    required this.showOnboarding,
+    required this.isLoggedIn,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +45,10 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         textTheme: GoogleFonts.openSansTextTheme(Theme.of(context).textTheme),
       ),
-      home: const LoginPage(),
+      home:
+          isLoggedIn
+              ? const HomeScreen()
+              : (showOnboarding ? const OnboardingPage() : const LoginPage()),
     );
   }
 }

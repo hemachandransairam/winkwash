@@ -3,7 +3,22 @@ import '../widgets/custom_widgets.dart';
 import 'payment_methods_page.dart';
 
 class BookingSummaryPage extends StatelessWidget {
-  const BookingSummaryPage({super.key});
+  final List<Map<String, dynamic>> selectedServices;
+  final double totalPrice;
+  final String date;
+  final String time;
+  final Map<String, String> vehicle;
+  final String address;
+
+  const BookingSummaryPage({
+    super.key,
+    required this.selectedServices,
+    required this.totalPrice,
+    required this.date,
+    required this.time,
+    required this.vehicle,
+    required this.address,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -49,9 +64,9 @@ class BookingSummaryPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  _buildPriceItem("Exterior Cleaning", "Rs. 299"),
-                  _buildPriceItem("Engine Bay Cleaning", "Rs. 150"),
-                  _buildPriceItem("Tire Cleaning", "Rs. 99"),
+                  ...selectedServices.map(
+                    (s) => _buildPriceItem(s['name'], "Rs. ${s['price']}"),
+                  ),
                   _buildPriceItem("Tax & Fees", "Rs. 99"),
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 20),
@@ -59,8 +74,8 @@ class BookingSummaryPage extends StatelessWidget {
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: const [
-                      Text(
+                    children: [
+                      const Text(
                         "Order Subtotal",
                         style: TextStyle(
                           fontSize: 15,
@@ -69,8 +84,8 @@ class BookingSummaryPage extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        "Rs. 647",
-                        style: TextStyle(
+                        "Rs. ${totalPrice + 99}",
+                        style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w800,
                           color: Color(0xFF01102B),
@@ -140,7 +155,15 @@ class BookingSummaryPage extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => const PaymentMethodsPage(),
+                builder:
+                    (context) => PaymentMethodsPage(
+                      selectedServices: selectedServices,
+                      totalPrice: totalPrice,
+                      date: date,
+                      time: time,
+                      vehicle: vehicle,
+                      address: address,
+                    ),
               ),
             );
           },

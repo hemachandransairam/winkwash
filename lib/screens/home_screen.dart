@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'book_services_page.dart';
+import 'booking_history_page.dart';
 import 'profile_page.dart';
 
 @RoutePage()
@@ -24,7 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _pages = [
       const HomeContent(),
       const BookServicesPage(),
-      const PlaceholderPage(title: 'Booking History'),
+      const BookingHistoryPage(),
       const ProfilePage(),
     ];
   }
@@ -149,7 +150,9 @@ class _HomeContentState extends State<HomeContent> {
   @override
   Widget build(BuildContext context) {
     final Size size = MediaQuery.of(context).size;
-    final double padding = size.width * 0.06;
+    final double horizontalPadding = size.width * 0.06;
+    final bool isShortScreen = size.height < 700;
+    final double headerHeight = size.height * (isShortScreen ? 0.25 : 0.28);
 
     return SingleChildScrollView(
       child: Column(
@@ -160,7 +163,7 @@ class _HomeContentState extends State<HomeContent> {
             children: [
               Container(
                 width: double.infinity,
-                height: size.height * 0.28,
+                height: headerHeight,
                 decoration: const BoxDecoration(
                   borderRadius: BorderRadius.only(
                     bottomLeft: Radius.circular(40),
@@ -173,23 +176,23 @@ class _HomeContentState extends State<HomeContent> {
                 ),
               ),
               Positioned(
-                top: size.height * 0.07,
-                left: padding,
-                right: padding,
+                top: size.height * 0.065,
+                left: horizontalPadding,
+                right: horizontalPadding,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Column(
+                        Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            const Text(
                               'Welcome,',
                               style: TextStyle(
                                 color: Colors.white70,
-                                fontSize: 14,
+                                fontSize: 13,
                                 fontWeight: FontWeight.w400,
                               ),
                             ),
@@ -197,7 +200,7 @@ class _HomeContentState extends State<HomeContent> {
                               'User',
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 32,
+                                fontSize: size.width * 0.08,
                                 fontWeight: FontWeight.w900,
                               ),
                             ),
@@ -217,26 +220,26 @@ class _HomeContentState extends State<HomeContent> {
                         ),
                       ],
                     ),
-                    SizedBox(height: size.height * 0.02),
+                    SizedBox(height: size.height * 0.015),
                     const Text(
                       'Location',
                       style: TextStyle(
                         color: Colors.white70,
-                        fontSize: 12,
+                        fontSize: 11,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     const Row(
                       children: [
-                        Icon(Icons.location_on, color: Colors.white, size: 18),
-                        SizedBox(width: 8),
+                        Icon(Icons.location_on, color: Colors.white, size: 16),
+                        SizedBox(width: 6),
                         Flexible(
                           child: Text(
                             'Paris corner, Pudu..',
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 15,
+                              fontSize: 14,
                               fontWeight: FontWeight.w600,
                             ),
                             overflow: TextOverflow.ellipsis,
@@ -246,7 +249,7 @@ class _HomeContentState extends State<HomeContent> {
                         Icon(
                           Icons.keyboard_arrow_down,
                           color: Colors.white,
-                          size: 18,
+                          size: 16,
                         ),
                       ],
                     ),
@@ -271,7 +274,7 @@ class _HomeContentState extends State<HomeContent> {
               itemBuilder: (context, index) {
                 final banner = _banners[index % _banners.length];
                 return _buildBanner(
-                  padding,
+                  horizontalPadding,
                   size,
                   banner['colors'],
                   banner['title'],
@@ -297,7 +300,7 @@ class _HomeContentState extends State<HomeContent> {
 
           // Active Orders Section
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: padding),
+            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
             child: const Text(
               'Active Orders',
               style: TextStyle(
@@ -309,7 +312,7 @@ class _HomeContentState extends State<HomeContent> {
           ),
           const SizedBox(height: 16),
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: padding),
+            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.all(30),
@@ -359,7 +362,7 @@ class _HomeContentState extends State<HomeContent> {
 
           // Recent History Section
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: padding),
+            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
             child: const Text(
               'Recent History',
               style: TextStyle(
@@ -371,7 +374,7 @@ class _HomeContentState extends State<HomeContent> {
           ),
           const SizedBox(height: 16),
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: padding),
+            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.all(30),

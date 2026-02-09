@@ -1,9 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widgets/custom_widgets.dart';
 import 'e_ticket_page.dart';
 
 class PaymentMethodsPage extends StatefulWidget {
-  const PaymentMethodsPage({super.key});
+  final List<Map<String, dynamic>> selectedServices;
+  final double totalPrice;
+  final String date;
+  final String time;
+  final Map<String, String> vehicle;
+  final String address;
+
+  const PaymentMethodsPage({
+    super.key,
+    required this.selectedServices,
+    required this.totalPrice,
+    required this.date,
+    required this.time,
+    required this.vehicle,
+    required this.address,
+  });
 
   @override
   State<PaymentMethodsPage> createState() => _PaymentMethodsPageState();
@@ -11,6 +27,53 @@ class PaymentMethodsPage extends StatefulWidget {
 
 class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
   String _selectedMethod = "Cash";
+  bool _isSaving = false;
+
+  void _confirmPayment() async {
+    setState(() => _isSaving = true);
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("User not logged in")));
+        setState(() => _isSaving = false);
+      }
+      return;
+    }
+
+    try {
+      await Supabase.instance.client.from('bookings').insert({
+        'user_id': user.id,
+        'selected_services': widget.selectedServices,
+        'total_price': widget.totalPrice + 99,
+        'booking_date': widget.date,
+        'booking_time': widget.time,
+        'vehicle_name': widget.vehicle['name'],
+        'vehicle_brand': widget.vehicle['brand'],
+        'vehicle_type': widget.vehicle['type'],
+        'address': widget.address,
+        'payment_method': _selectedMethod,
+        'status': 'pending',
+      });
+
+      if (mounted) {
+        setState(() => _isSaving = false);
+        _showSuccessDialog();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error saving booking: $e"),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    }
+  }
 
   void _showSuccessDialog() {
     showDialog(
@@ -185,8 +248,8 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
             ),
             const SizedBox(height: 24),
             buildPrimaryButton(
-              text: "Confirm Payment",
-              onTap: _showSuccessDialog,
+              text: _isSaving ? "Processing..." : "Confirm Payment",
+              onTap: _isSaving ? null : _confirmPayment,
             ),
           ],
         ),

@@ -1,5 +1,7 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../screens/home_screen.dart';
 
 class CreateAccountPage extends StatefulWidget {
   const CreateAccountPage({super.key});
@@ -10,33 +12,10 @@ class CreateAccountPage extends StatefulWidget {
 
 class _CreateAccountPageState extends State<CreateAccountPage> {
   bool _obscurePassword = true;
-  bool _agreedToTerms = false;
-
-  // Controllers to track user input in real-time
+  bool _isLoading = false;
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    // Listen to changes to rebuild the UI and re-evaluate button state
-    _nameController.addListener(_validateForm);
-    _emailController.addListener(_validateForm);
-    _passwordController.addListener(_validateForm);
-  }
-
-  void _validateForm() {
-    setState(() {}); // Triggers build to check _isFormValid
-  }
-
-  // Logic: All fields must be filled AND the checkbox must be checked
-  bool get _isFormValid {
-    return _nameController.text.isNotEmpty &&
-        _emailController.text.isNotEmpty &&
-        _passwordController.text.isNotEmpty &&
-        _agreedToTerms;
-  }
 
   @override
   void dispose() {
@@ -46,324 +25,253 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
     super.dispose();
   }
 
+  Future<void> _handleSignUp() async {
+    if (_nameController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Please fill all fields")));
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      final response = await Supabase.instance.client.auth.signUp(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+        data: {'full_name': _nameController.text.trim()},
+      );
+
+      if (response.user != null) {
+        // Create profile entry
+        await Supabase.instance.client.from('profiles').upsert({
+          'id': response.user!.id,
+          'full_name': _nameController.text.trim(),
+          'email': _emailController.text.trim(),
+        });
+
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Registration failed: $e")));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final isSmallScreen = size.height < 750;
+    final isShortScreen = size.height < 700;
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const ClampingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight:
-                  size.height -
-                  MediaQuery.of(context).padding.top -
-                  MediaQuery.of(context).padding.bottom,
-            ),
-            child: IntrinsicHeight(
+      body: Stack(
+        children: [
+          // Background Pattern
+          Positioned.fill(
+            child: Image.asset('assets/loginbg.png', fit: BoxFit.cover),
+          ),
+
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
                 children: [
-                  SizedBox(height: isSmallScreen ? 15 : 30),
-                  const Text(
-                    "Create Account",
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1A1A1A),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    "Fill your information below or register with\nyour social account.",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.grey,
-                      height: 1.3,
-                      fontSize: 13,
-                    ),
-                  ),
-                  SizedBox(height: isSmallScreen ? 15 : 30),
+                  SizedBox(height: isShortScreen ? 40 : 80),
 
-                  // Inputs linked to controllers
-                  _buildField(
-                    "Name",
-                    "Ex. John Doe",
-                    controller: _nameController,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildField(
-                    "Email",
-                    "example@gmail.com",
-                    controller: _emailController,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildField(
-                    "Password",
-                    "****************",
-                    controller: _passwordController,
-                    isPassword: true,
-                    obscureText: _obscurePassword,
-                    onToggle:
-                        () => setState(
-                          () => _obscurePassword = !_obscurePassword,
-                        ),
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  // Agreement Checkbox
-                  Row(
-                    children: [
-                      SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: Checkbox(
-                          value: _agreedToTerms,
-                          onChanged:
-                              (val) => setState(() {
-                                _agreedToTerms = val!;
-                                _validateForm();
-                              }),
-                          activeColor: const Color(0xFF000814),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4),
+                  // Glass Card
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(40),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        padding: EdgeInsets.all(isShortScreen ? 24 : 32),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(40),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.2),
+                            width: 1.5,
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      const Flexible(
-                        child: Text(
-                          "Agree with Terms & Condition",
-                          style: TextStyle(color: Colors.grey, fontSize: 13),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
+                        child: Column(
+                          children: [
+                            Text(
+                              "Create Account",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: size.width * 0.07,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              "Join the Wynk Wash family!",
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 14,
+                              ),
+                            ),
+                            SizedBox(height: isShortScreen ? 30 : 40),
 
-                  SizedBox(height: isSmallScreen ? 15 : 25),
+                            _buildTextField(
+                              controller: _nameController,
+                              hint: "Full Name",
+                              icon: Icons.person_outline,
+                            ),
+                            const SizedBox(height: 20),
+                            _buildTextField(
+                              controller: _emailController,
+                              hint: "Email Address",
+                              icon: Icons.email_outlined,
+                            ),
+                            const SizedBox(height: 20),
+                            _buildTextField(
+                              controller: _passwordController,
+                              hint: "Password",
+                              icon: Icons.lock_outline,
+                              isPassword: true,
+                              obscureText: _obscurePassword,
+                              onToggle:
+                                  () => setState(
+                                    () => _obscurePassword = !_obscurePassword,
+                                  ),
+                            ),
 
-                  // Functional Sign Up Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: ElevatedButton(
-                      // Button is disabled (null) until form is valid
-                      onPressed:
-                          _isFormValid
-                              ? () async {
-                                showDialog(
-                                  context: context,
-                                  barrierDismissible: false,
-                                  builder:
-                                      (context) => const Center(
-                                        child: CircularProgressIndicator(),
-                                      ),
-                                );
-                                try {
-                                  final response = await Supabase
-                                      .instance
-                                      .client
-                                      .auth
-                                      .signUp(
-                                        email: _emailController.text.trim(),
-                                        password:
-                                            _passwordController.text.trim(),
-                                        data: {
-                                          'full_name':
-                                              _nameController.text.trim(),
-                                        },
-                                      );
+                            SizedBox(height: isShortScreen ? 32 : 48),
 
-                                  if (mounted)
-                                    Navigator.pop(context); // Close loading
-
-                                  if (response.user != null) {
-                                    if (mounted) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            "Account created! Please sign in.",
+                            SizedBox(
+                              width: double.infinity,
+                              height: 56,
+                              child: ElevatedButton(
+                                onPressed: _isLoading ? null : _handleSignUp,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white.withOpacity(
+                                    0.1,
+                                  ),
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(28),
+                                    side: BorderSide(
+                                      color: Colors.white.withOpacity(0.3),
+                                    ),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                child:
+                                    _isLoading
+                                        ? const SizedBox(
+                                          height: 20,
+                                          width: 20,
+                                          child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                        : const Text(
+                                          "Sign Up",
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
                                           ),
                                         ),
-                                      );
-                                      Navigator.pop(
-                                        context,
-                                      ); // Go back to Login
-                                    }
-                                  }
-                                } catch (e) {
-                                  if (mounted) {
-                                    Navigator.pop(context); // Close loading
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text("Error: $e")),
-                                    );
-                                  }
-                                }
-                              }
-                              : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF000814),
-                        disabledBackgroundColor: Colors.grey.shade300,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                      ),
-                      child: Text(
-                        "Sign Up",
-                        style: TextStyle(
-                          color:
-                              _isFormValid
-                                  ? Colors.white
-                                  : Colors.grey.shade600,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ),
 
-                  SizedBox(height: isSmallScreen ? 20 : 30),
-                  const Text(
-                    "Or sign up with",
-                    style: TextStyle(color: Colors.grey, fontSize: 12),
-                  ),
-                  const SizedBox(height: 15),
+                  SizedBox(height: isShortScreen ? 24 : 32),
 
-                  // Social Icons
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _socialCircle('assets/google.png'),
-                      const SizedBox(width: 20),
-                      _socialCircle('assets/fb.png'),
-                      const SizedBox(width: 20),
-                      _socialCircle('assets/x.png'),
-                    ],
-                  ),
-
-                  const Spacer(),
-
-                  // Navigation back to Login
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Text(
                         "Already have an account? ",
-                        style: TextStyle(color: Colors.grey, fontSize: 13),
+                        style: TextStyle(color: Colors.white70),
                       ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          minimumSize: Size.zero,
-                        ),
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
                         child: const Text(
                           "Sign In",
                           style: TextStyle(
+                            color: Colors.white,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF1D3557),
-                            fontSize: 13,
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 15),
+
+                  SizedBox(height: isShortScreen ? 40 : 60),
+
+                  // Bottom Logo
+                  Image.asset(
+                    'assets/wynkwash_logo_white.png',
+                    width: size.width * 0.4,
+                  ),
+                  const SizedBox(height: 40),
                 ],
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildField(
-    String label,
-    String hint, {
+  Widget _buildTextField({
     required TextEditingController controller,
+    required String hint,
+    required IconData icon,
     bool isPassword = false,
     bool obscureText = false,
     VoidCallback? onToggle,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 8),
-          child: Text(
-            label,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-          ),
-        ),
-        TextField(
-          controller: controller, // Link controller to track text
-          obscureText: obscureText,
-          style: const TextStyle(fontSize: 15),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: TextStyle(
-              color: Colors.grey.withOpacity(0.4),
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-            ),
-            filled: true,
-            fillColor: const Color(0xFFFAFAFA),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 18,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade100),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: Color(0xFF000814),
-                width: 1.5,
-              ),
-            ),
-            suffixIcon:
-                isPassword
-                    ? IconButton(
-                      icon: Icon(
-                        obscureText
-                            ? Icons.visibility_off_outlined
-                            : Icons.visibility_outlined,
-                        color: Colors.grey.shade400,
-                        size: 20,
-                      ),
-                      onPressed: onToggle,
-                    )
-                    : null,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _socialCircle(String assetPath) {
     return Container(
-      width: 55,
-      height: 55,
-      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.white,
-        border: Border.all(color: Colors.grey.shade200),
+        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
       ),
-      child: Image.asset(assetPath, fit: BoxFit.contain),
+      child: TextField(
+        controller: controller,
+        obscureText: obscureText,
+        style: const TextStyle(color: Colors.white),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: TextStyle(
+            color: Colors.white.withOpacity(0.3),
+            fontSize: 14,
+          ),
+          prefixIcon: Icon(icon, color: Colors.white70, size: 20),
+          suffixIcon:
+              isPassword
+                  ? IconButton(
+                    icon: Icon(
+                      obscureText ? Icons.visibility_off : Icons.visibility,
+                      color: Colors.white70,
+                      size: 20,
+                    ),
+                    onPressed: onToggle,
+                  )
+                  : null,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(vertical: 16),
+        ),
+      ),
     );
   }
 }

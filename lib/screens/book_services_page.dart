@@ -24,13 +24,27 @@ class _BookServicesPageState extends State<BookServicesPage> {
   int? _selectedVehicleIndex;
 
   final List<Map<String, dynamic>> _availableServices = [
-    {"name": "Exterior Cleaning", "icon": Icons.local_car_wash},
-    {"name": "Vacuum Cleaning", "icon": Icons.cleaning_services},
-    {"name": "Interior Cleaning", "icon": Icons.airline_seat_recline_extra},
-    {"name": "Engine Bay Cleaning", "icon": Icons.engineering},
-    {"name": "Car Polish Cleaning", "icon": Icons.auto_fix_high},
-    {"name": "Tire Cleaning", "icon": Icons.tire_repair},
+    {"name": "Exterior Cleaning", "icon": Icons.local_car_wash, "price": 299},
+    {"name": "Vacuum Cleaning", "icon": Icons.cleaning_services, "price": 199},
+    {
+      "name": "Interior Cleaning",
+      "icon": Icons.airline_seat_recline_extra,
+      "price": 399,
+    },
+    {"name": "Engine Bay Cleaning", "icon": Icons.engineering, "price": 150},
+    {"name": "Car Polish Cleaning", "icon": Icons.auto_fix_high, "price": 499},
+    {"name": "Tire Cleaning", "icon": Icons.tire_repair, "price": 99},
   ];
+
+  double get _totalPrice {
+    double total = 0;
+    for (var s in _availableServices) {
+      if (_selectedServices.contains(s['name'])) {
+        total += s['price'];
+      }
+    }
+    return total;
+  }
 
   void _resetAddressForm() {
     _addressController.clear();
@@ -51,33 +65,142 @@ class _BookServicesPageState extends State<BookServicesPage> {
       backgroundColor: const Color(0xFFF6F6F6),
       appBar: buildGlobalAppBar(context: context, title: "Book Services"),
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
-              itemCount: _availableServices.length,
-              itemBuilder: (context, index) {
-                final s = _availableServices[index];
-                return buildServiceTile(
-                  title: s['name'],
-                  icon: s['icon'],
-                  isSelected: _selectedServices.contains(s['name']),
-                  onTap:
-                      () => setState(() {
-                        _selectedServices.contains(s['name'])
-                            ? _selectedServices.remove(s['name'])
-                            : _selectedServices.add(s['name']);
-                      }),
-                );
-              },
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+            child: const Text(
+              "Select Vehicle",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF01102B),
+              ),
             ),
+          ),
+          Expanded(
+            child:
+                _savedVehicles.isEmpty
+                    ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.directions_car_outlined,
+                            size: 64,
+                            color: Colors.grey[300],
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            "No vehicles added yet",
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          SizedBox(
+                            width: 200,
+                            child: buildPrimaryButton(
+                              text: "Add Vehicle",
+                              onTap: () => _addVehicle((fn) => fn()),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                    : GridView.builder(
+                      padding: const EdgeInsets.all(20),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                            childAspectRatio: 1.1,
+                          ),
+                      itemCount: _savedVehicles.length + 1,
+                      itemBuilder: (context, index) {
+                        if (index == _savedVehicles.length) {
+                          return GestureDetector(
+                            onTap: () => _addVehicle((fn) => fn()),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(24),
+                                border: Border.all(
+                                  color: Colors.grey[300]!,
+                                  style: BorderStyle.solid,
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.add,
+                                color: Colors.grey,
+                                size: 32,
+                              ),
+                            ),
+                          );
+                        }
+                        final v = _savedVehicles[index];
+                        final isSelected = _selectedVehicleIndex == index;
+                        return GestureDetector(
+                          onTap:
+                              () => setState(() {
+                                _selectedVehicleIndex = index;
+                              }),
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color:
+                                  isSelected
+                                      ? const Color(0xFF01102B)
+                                      : Colors.white,
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.04),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.directions_car,
+                                  color:
+                                      isSelected
+                                          ? Colors.white
+                                          : const Color(0xFF01102B),
+                                  size: 32,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  v['name']!,
+                                  style: TextStyle(
+                                    color:
+                                        isSelected
+                                            ? Colors.white
+                                            : const Color(0xFF01102B),
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 14,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
             child: buildPrimaryButton(
               text: "Continue",
               onTap:
-                  _selectedServices.isNotEmpty
+                  _selectedVehicleIndex != null
                       ? () => _showBookingSheet(context)
                       : null,
             ),
@@ -220,7 +343,7 @@ class _BookServicesPageState extends State<BookServicesPage> {
                             _buildTimeGrid(setModalState, size),
                             const SizedBox(height: 25),
                             const Text(
-                              "Select Vehicle",
+                              "Select Services",
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -228,146 +351,21 @@ class _BookServicesPageState extends State<BookServicesPage> {
                               ),
                             ),
                             const SizedBox(height: 15),
-                            if (_savedVehicles.isEmpty)
-                              Center(
-                                child: Column(
-                                  children: [
-                                    const Text(
-                                      "No vehicle details found.",
-                                      style: TextStyle(color: Colors.grey),
-                                    ),
-                                    TextButton.icon(
-                                      onPressed:
-                                          () => _addVehicle(setModalState),
-                                      icon: const Icon(
-                                        Icons.add_circle_outline,
-                                      ),
-                                      label: const Text("Add Vehicle Details"),
-                                    ),
-                                  ],
+                            ..._availableServices.map((s) {
+                              return buildServiceTile(
+                                title: s['name'],
+                                icon: s['icon'],
+                                isSelected: _selectedServices.contains(
+                                  s['name'],
                                 ),
-                              )
-                            else
-                              SizedBox(
-                                height: 100,
-                                child: ListView.builder(
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount: _savedVehicles.length + 1,
-                                  itemBuilder: (context, index) {
-                                    if (index == _savedVehicles.length) {
-                                      return Padding(
-                                        padding: const EdgeInsets.only(
-                                          right: 12,
-                                        ),
-                                        child: InkWell(
-                                          onTap:
-                                              () => _addVehicle(setModalState),
-                                          child: Container(
-                                            width: 100,
-                                            decoration: BoxDecoration(
-                                              color: Colors.grey[100],
-                                              borderRadius:
-                                                  BorderRadius.circular(20),
-                                              border: Border.all(
-                                                color: Colors.grey[300]!,
-                                              ),
-                                            ),
-                                            child: const Icon(
-                                              Icons.add,
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    }
-                                    final v = _savedVehicles[index];
-                                    final isSelected =
-                                        _selectedVehicleIndex == index;
-                                    return Padding(
-                                      padding: const EdgeInsets.only(right: 12),
-                                      child: GestureDetector(
-                                        onTap:
-                                            () => setModalState(
-                                              () =>
-                                                  _selectedVehicleIndex = index,
-                                            ),
-                                        onLongPress:
-                                            () => _showDeleteVehicleDialog(
-                                              context,
-                                              index,
-                                              setModalState,
-                                            ),
-                                        child: Container(
-                                          width: 150,
-                                          padding: const EdgeInsets.all(12),
-                                          decoration: BoxDecoration(
-                                            color:
-                                                isSelected
-                                                    ? const Color(0xFF01102B)
-                                                    : Colors.white,
-                                            borderRadius: BorderRadius.circular(
-                                              20,
-                                            ),
-                                            border: Border.all(
-                                              color:
-                                                  isSelected
-                                                      ? const Color(0xFF01102B)
-                                                      : Colors.grey[300]!,
-                                              width: 2,
-                                            ),
-                                          ),
-                                          child: Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              Icon(
-                                                Icons.directions_car,
-                                                color:
-                                                    isSelected
-                                                        ? Colors.white
-                                                        : const Color(
-                                                          0xFF01102B,
-                                                        ),
-                                                size: 28,
-                                              ),
-                                              const SizedBox(height: 8),
-                                              Text(
-                                                v['name']!,
-                                                style: TextStyle(
-                                                  color:
-                                                      isSelected
-                                                          ? Colors.white
-                                                          : const Color(
-                                                            0xFF01102B,
-                                                          ),
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 13,
-                                                ),
-                                                textAlign: TextAlign.center,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                              const SizedBox(height: 2),
-                                              Text(
-                                                '${v['brand']} ${v['type']}',
-                                                style: TextStyle(
-                                                  color:
-                                                      isSelected
-                                                          ? Colors.white70
-                                                          : Colors.grey,
-                                                  fontSize: 10,
-                                                ),
-                                                textAlign: TextAlign.center,
-                                                maxLines: 2,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
+                                onTap:
+                                    () => setModalState(() {
+                                      _selectedServices.contains(s['name'])
+                                          ? _selectedServices.remove(s['name'])
+                                          : _selectedServices.add(s['name']);
+                                    }),
+                              );
+                            }),
                             const SizedBox(height: 25),
                             const Text(
                               "Select Location",
@@ -590,7 +588,25 @@ class _BookServicesPageState extends State<BookServicesPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const BookingSummaryPage(),
+                              builder:
+                                  (context) => BookingSummaryPage(
+                                    selectedServices:
+                                        _availableServices
+                                            .where(
+                                              (s) => _selectedServices.contains(
+                                                s['name'],
+                                              ),
+                                            )
+                                            .toList(),
+                                    totalPrice: _totalPrice,
+                                    date: DateFormat(
+                                      'yyyy-MM-dd',
+                                    ).format(_selectedDate),
+                                    time: _selectedTime,
+                                    vehicle:
+                                        _savedVehicles[_selectedVehicleIndex!],
+                                    address: _addressController.text,
+                                  ),
                             ),
                           );
                           _resetAddressForm();
@@ -966,48 +982,6 @@ class _BookServicesPageState extends State<BookServicesPage> {
     return 'Car $number';
   }
 
-  void _showDeleteVehicleDialog(
-    BuildContext context,
-    int index,
-    StateSetter setModalState,
-  ) {
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text("Delete Vehicle"),
-            content: const Text(
-              "Are you sure you want to delete this vehicle?",
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("Cancel"),
-              ),
-              TextButton(
-                onPressed: () {
-                  setModalState(() {
-                    _savedVehicles.removeAt(index);
-                    if (_selectedVehicleIndex == index) {
-                      _selectedVehicleIndex = null;
-                    } else if (_selectedVehicleIndex != null &&
-                        _selectedVehicleIndex! > index) {
-                      _selectedVehicleIndex = _selectedVehicleIndex! - 1;
-                    }
-                  });
-                  setState(() {});
-                  Navigator.pop(context);
-                },
-                child: const Text(
-                  "Delete",
-                  style: TextStyle(color: Colors.red),
-                ),
-              ),
-            ],
-          ),
-    );
-  }
-
   Widget _buildTimeGrid(StateSetter setModalState, Size size) {
     return GridView.count(
       shrinkWrap: true,
@@ -1017,7 +991,18 @@ class _BookServicesPageState extends State<BookServicesPage> {
       childAspectRatio: 2.8,
       physics: const NeverScrollableScrollPhysics(),
       children: [
-        ...["9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM"].map(
+        ...[
+          "9:00 AM",
+          "10:00 AM",
+          "11:00 AM",
+          "12:00 PM",
+          "1:00 PM",
+          "2:00 PM",
+          "3:00 PM",
+          "4:00 PM",
+          "5:00 PM",
+          "6:00 PM",
+        ].map(
           (t) => buildTimeChip(
             time: t,
             isSelected: _selectedTime == t,
