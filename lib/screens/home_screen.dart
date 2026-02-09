@@ -155,6 +155,7 @@ class _HomeContentState extends State<HomeContent> {
   Timer? _carouselTimer;
   // _isLoading is used for cancel action indication
   bool _isLoading = false;
+  late final Stream<List<Map<String, dynamic>>> _activeOrderStream;
 
   final List<Map<String, dynamic>> _banners = [
     {
@@ -172,6 +173,14 @@ class _HomeContentState extends State<HomeContent> {
   @override
   void initState() {
     super.initState();
+    final user = Supabase.instance.client.auth.currentUser;
+    _activeOrderStream = Supabase.instance.client
+        .from('bookings')
+        .stream(primaryKey: ['id'])
+        .eq('user_id', user?.id ?? '')
+        .order('created_at', ascending: false)
+        .limit(1);
+
     // Start at a large index in the middle for circular scrolling simulation
     _currentBannerPage = _infinitePageCount ~/ 2;
     _pageController = PageController(initialPage: _currentBannerPage);
@@ -203,7 +212,6 @@ class _HomeContentState extends State<HomeContent> {
     final double horizontalPadding = size.width * 0.06;
     final bool isShortScreen = size.height < 700;
     final double headerHeight = size.height * (isShortScreen ? 0.25 : 0.28);
-    final user = Supabase.instance.client.auth.currentUser;
 
     return SingleChildScrollView(
       child: Column(
@@ -350,261 +358,222 @@ class _HomeContentState extends State<HomeContent> {
           const SizedBox(height: 24),
 
           // Active Orders Section
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-            child: const Text(
-              'Active Orders',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF01102B),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-            child: StreamBuilder<List<Map<String, dynamic>>>(
-              stream: Supabase.instance.client
-                  .from('bookings')
-                  .stream(primaryKey: ['id'])
-                  .eq('user_id', user?.id ?? '')
-                  .order('created_at', ascending: false)
-                  .limit(1),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (snapshot.hasError) {
-                  return const SizedBox(); // Hide on error
-                }
+          StreamBuilder<List<Map<String, dynamic>>>(
+            stream: _activeOrderStream,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const SizedBox.shrink();
+              }
+              if (snapshot.hasError) {
+                return const SizedBox.shrink();
+              }
 
-                final bookings = snapshot.data ?? [];
-                Map<String, dynamic>? activeBooking;
+              final bookings = snapshot.data ?? [];
+              Map<String, dynamic>? activeBooking;
 
-                if (bookings.isNotEmpty) {
-                  final booking = bookings.first;
-                  final status =
-                      (booking['status'] as String? ?? '').toLowerCase();
-                  if (status == 'pending' || status == 'confirmed') {
-                    activeBooking = booking;
-                  }
+              if (bookings.isNotEmpty) {
+                final booking = bookings.first;
+                final status =
+                    (booking['status'] as String? ?? '').toLowerCase();
+                if (status == 'pending' || status == 'confirmed') {
+                  activeBooking = booking;
                 }
+              }
 
-                if (activeBooking == null) {
-                  return Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(30),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
-                          blurRadius: 15,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.inventory_2_outlined,
-                          size: 48,
-                          color: Colors.grey[300],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No Active Orders',
-                          style: TextStyle(
-                            color: Colors.grey[500],
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Active orders will appear here.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.grey[400],
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-                return Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
-                        blurRadius: 15,
-                        offset: const Offset(0, 8),
+              if (activeBooking == null) {
+                return const SizedBox.shrink();
+              }
+
+              return Padding(
+                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Active Orders',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF01102B),
                       ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.04),
+                            blurRadius: 15,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                "${activeBooking['vehicle_brand']} ${activeBooking['vehicle_name']}",
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w800,
-                                  color: Color(0xFF01102B),
-                                ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "${activeBooking['vehicle_brand']} ${activeBooking['vehicle_name']}",
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w800,
+                                      color: Color(0xFF01102B),
+                                    ),
+                                  ),
+                                  Text(
+                                    activeBooking['vehicle_type'] ?? '',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey[600],
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              Text(
-                                activeBooking['vehicle_type'] ?? '',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.grey[600],
-                                  fontWeight: FontWeight.w500,
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color:
+                                      (activeBooking['status'] == 'pending')
+                                          ? const Color(0xFFFFF4E5)
+                                          : const Color(0xFFE8F5E9),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  (activeBooking['status'] as String)
+                                      .toUpperCase(),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color:
+                                        (activeBooking['status'] == 'pending')
+                                            ? const Color(0xFFFF9800)
+                                            : const Color(0xFF4CAF50),
+                                  ),
                                 ),
                               ),
                             ],
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color:
-                                  (activeBooking['status'] == 'pending')
-                                      ? const Color(0xFFFFF4E5)
-                                      : const Color(0xFFE8F5E9),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              (activeBooking['status'] as String).toUpperCase(),
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color:
-                                    (activeBooking['status'] == 'pending')
-                                        ? const Color(0xFFFF9800)
-                                        : const Color(0xFF4CAF50),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            child: Divider(height: 1),
+                          ),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.calendar_today_outlined,
+                                size: 16,
+                                color: Colors.grey,
                               ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        child: Divider(height: 1),
-                      ),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.calendar_today_outlined,
-                            size: 16,
-                            color: Colors.grey,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            "${activeBooking['booking_date']} • ${activeBooking['booking_time']}",
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                              color: Color(0xFF01102B),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(
-                            Icons.location_on_outlined,
-                            size: 16,
-                            color: Colors.grey,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              activeBooking['address_text'] ?? '',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 13,
-                                color: Colors.grey[700],
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "Total Price",
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          Text(
-                            "Rs. ${activeBooking['total_price']}",
-                            style: const TextStyle(
-                              color: Color(0xFF01102B),
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 44,
-                        child:
-                            _isLoading
-                                ? const Center(
-                                  child: CircularProgressIndicator(),
-                                )
-                                : OutlinedButton(
-                                  onPressed:
-                                      () => _showCancelDialog(
-                                        activeBooking!['id'],
-                                      ),
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: Colors.red,
-                                    side: const BorderSide(color: Colors.red),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                  child: const Text(
-                                    "Cancel Order",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
+                              const SizedBox(width: 8),
+                              Text(
+                                "${activeBooking['booking_date']} • ${activeBooking['booking_time']}",
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                  color: Color(0xFF01102B),
                                 ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(
+                                Icons.location_on_outlined,
+                                size: 16,
+                                color: Colors.grey,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  activeBooking['address_text'] ?? '',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 13,
+                                    color: Colors.grey[700],
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "Total Price",
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                "Rs. ${activeBooking['total_price']}",
+                                style: const TextStyle(
+                                  color: Color(0xFF01102B),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 44,
+                            child:
+                                _isLoading
+                                    ? const Center(
+                                      child: CircularProgressIndicator(),
+                                    )
+                                    : OutlinedButton(
+                                      onPressed:
+                                          () => _showCancelDialog(
+                                            activeBooking!['id'],
+                                          ),
+                                      style: OutlinedButton.styleFrom(
+                                        foregroundColor: Colors.red,
+                                        side: const BorderSide(
+                                          color: Colors.red,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        "Cancel Order",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                );
-              },
-            ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
 
           const SizedBox(height: 28),
